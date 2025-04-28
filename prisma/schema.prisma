@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  hashedPassword String?
+  name           String?
+  role           String        @default("user")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
+  sites          Site[]
+  activityLogs   ActivityLog[]
+  sessions       Session[]     // Ajouter cette relation
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Site {
+  id           String        @id @default(uuid())
+  name         String
+  domain       String        @unique
+  type         String        // 'reverse_proxy' ou 'static'
+  enabled      Boolean       @default(true)
+  config       Json
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at")
+  createdBy    String        @map("created_by")
+  creator      User          @relation(fields: [createdBy], references: [id])
+  certificates Certificate[]
+
+  @@map("sites")
+}
+
+model Certificate {
+  id         String    @id @default(uuid())
+  domain     String    @unique
+  email      String
+  autoRenew  Boolean   @default(true) @map("auto_renew")
+  lastRenewal DateTime? @map("last_renewal")
+  expiresAt  DateTime? @map("expires_at")
+  siteId     String    @map("site_id")
+  site       Site      @relation(fields: [siteId], references: [id])
+
+  @@map("certificates")
+}
+
+model Setting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  action      String
+  entity      String
+  entityId    String?  @map("entity_id")
+  details     Json?
+  performedBy String   @map("performed_by")
+  performedAt DateTime @default(now()) @map("performed_at")
+  performer   User     @relation(fields: [performedBy], references: [id])
+
+  @@map("activity_logs")
+}

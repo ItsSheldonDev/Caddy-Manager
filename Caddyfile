@@ -1,0 +1,8 @@
+{
+    admin 0.0.0.0:2019
+    # Utiliser 0.0.0.0 pour rendre l'API accessible depuis l'hôte
+}
+
+:80 {
+    respond "Caddy is running"
+}

@@ -1,0 +1,45 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - caddy
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/caddy_manager
+      - CADDY_API_URL=http://caddy:2019
+      - AUTH_SECRET=votre_secret_auth_tres_securise
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=caddy_manager
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2019:2019"  # API Caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:
