@@ -7,7 +7,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="${PATH}:/root/.bun/bin"
 
 WORKDIR /app
-COPY package.json bun.lockb ./
+COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
 COPY . .
