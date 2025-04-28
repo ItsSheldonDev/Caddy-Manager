@@ -182,16 +182,27 @@ export class CaddyService {
     
     try {
       // Récupérer la configuration actuelle
-      const currentConfig = await this.getConfig();
-      const routes = currentConfig?.apps?.http?.servers?.default?.routes || [];
+      const config = await this.getConfig();
       
-      // Filtrer la route à supprimer
-      const newRoutes = routes.filter((route: any) => 
-        !route.match?.some((m: any) => m.host?.includes(domain))
-      );
+      // Vérifier si nous avons le serveur par défaut ou srv0
+      const serverKey = config.apps?.http?.servers?.default ? 'default' : 'srv0';
       
-      // Mettre à jour les routes
-      const response = await fetch(`${this.apiUrl}/config/apps/http/servers/default/routes`, {
+      console.log("Suppression du site pour le domaine:", domain);
+      console.log("Utilisation du serveur:", serverKey);
+      
+      // Trouver toutes les routes qui ne correspondent PAS au domaine
+      const newRoutes = config.apps.http.servers[serverKey].routes.filter((route: any) => {
+        // Une route sans match correspond à tout et doit être gardée
+        if (!route.match) return true;
+        
+        // Ne gardez pas les routes qui correspondent à ce domaine
+        return !route.match.some((matcher: any) => 
+          matcher.host && matcher.host.includes(domain)
+        );
+      });
+      
+      // Mettre à jour la configuration avec les routes filtrées (sans le domaine supprimé)
+      const response = await fetch(`${this.apiUrl}/config/apps/http/servers/${serverKey}/routes`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -200,10 +211,23 @@ export class CaddyService {
       });
       
       if (!response.ok) {
-        throw new Error(`Erreur API Caddy: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Erreur API Caddy: ${response.status}\nDétails: ${errorText}`);
       }
       
-      return await response.json();
+      // Certains endpoints Caddy ne renvoient pas de JSON
+      const responseText = await response.text();
+      if (responseText.trim() === '') {
+        // Si la réponse est vide, c'est probablement OK
+        return { success: true, message: 'Site supprimé avec succès de la configuration Caddy' };
+      }
+      
+      try {
+        return JSON.parse(responseText);
+      } catch (parseError) {
+        // Si ce n'est pas du JSON mais que la requête a réussi, on retourne le texte
+        return { success: true, message: responseText };
+      }
     } catch (error) {
       console.error('Erreur lors de la suppression du site:', error);
       throw error;
