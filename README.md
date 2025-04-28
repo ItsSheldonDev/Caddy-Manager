@@ -1,38 +1,105 @@
-# sv
+# Caddy Manager
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Un tableau de bord moderne pour gérer facilement vos configurations Caddy Server.
 
-## Creating a project
+## Fonctionnalités
 
-If you're seeing this, you've probably already done this step. Congrats!
+- 🔄 Création et gestion de sites en reverse proxy
+- 📂 Configuration de sites web statiques
+- 🔒 Gestion des certificats SSL
+- 📊 Dashboard avec statistiques et monitoring
+- 📝 Journalisation des activités
+- 👥 Gestion des utilisateurs et des permissions
+
+## Technologies utilisées
+
+- **Frontend**: SvelteKit, Tailwind CSS
+- **Backend**: Node.js
+- **Base de données**: PostgreSQL avec Prisma ORM
+- **Serveur web**: Caddy Server v2
+
+## Installation
+
+### Prérequis
+
+- Node.js 18+
+- PostgreSQL
+- Docker (recommandé)
+
+### Installation avec Docker
 
 ```bash
-# create a new project in the current directory
-npx sv create
+# Cloner le dépôt
+git clone https://github.com/ItsSheldonDev/Caddy-Manager.git
+cd Caddy-Manager
 
-# create a new project in my-app
-npx sv create my-app
+# Installer les dépendances
+bun install
+
+# Configurer les variables d'environnement
+cp .env.example .env
+# Éditez .env pour configurer vos paramètres
+
+# Lancer les conteneurs Docker
+docker-compose up -d
+
+# Exécuter les migrations de base de données
+bunx prisma migrate dev
+
+# Lancer l'application en mode développement
+bun dev
 ```
 
-## Developing
+## Configuration
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Variables d'environnement
+
+Créez un fichier `.env` à la racine du projet avec les variables suivantes :
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/caddy_manager"
+CADDY_API_URL="http://localhost:2019"
+```
+
+## Développement
 
 ```bash
-npm run dev
+# Lancer en mode développement
+bun dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# Générer les types Prisma
+bunx prisma generate
+
+# Exécuter les migrations
+bunx prisma migrate dev
 ```
 
-## Building
-
-To create a production version of your app:
+## Déploiement en production
 
 ```bash
-npm run build
+# Construire l'application
+bun run build
+
+# Démarrer en production
+bun run start
 ```
 
-You can preview the production build with `npm run preview`.
+## Structure du projet
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```
+src/
+├── lib/               # Librairies et utilitaires
+│   ├── repositories/  # Couche d'accès aux données
+│   ├── services/      # Services métier
+│   └── types/         # Types TypeScript
+├── routes/            # Routes SvelteKit
+└── app.html           # Template HTML
+```
+
+## Contribuer
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## Licence
+
+Ce projet est sous licence MIT.
